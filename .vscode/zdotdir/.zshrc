@@ -13,3 +13,7 @@ unset __mamba_setup
 
 # see `t.sh`
 micromamba activate pocl
+
+export PATH=$PATH:${EXT_PATH}
+export PYTHONPATH=$PYTHONPATH:${EXT_PYTHONPATH}
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${EXT_LD_LIBRARY_PATH}
