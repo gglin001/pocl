@@ -435,7 +435,7 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
 if(APPLE)
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib;@loader_path/../lib")
 elseif(UNIX)
-  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib;$ORIGIN/../lib")
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib;$ORIGIN/../lib;$ORIGIN")
 endif()
 
 ######################################################################################
