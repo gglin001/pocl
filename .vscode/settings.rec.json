@@ -1,4 +1,12 @@
 {
+    "terminal.integrated.env.linux": {
+        "EXT_PATH": "${workspaceFolder}/build/bin",
+        "POCL_DEBUG": "all",
+    },
+    "terminal.integrated.env.osx": {
+        "EXT_PATH": "${workspaceFolder}/build/bin",
+        "POCL_DEBUG": "all",
+    },
     "files.trimTrailingWhitespace": false,
     "files.insertFinalNewline": false,
 }

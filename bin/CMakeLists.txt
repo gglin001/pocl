@@ -30,13 +30,6 @@ harden(poclcc)
 
 target_link_libraries(poclcc poclu ${OPENCL_LIBS})
 
-# temp for macos, just for local debug
-if(APPLE)
-  set_target_properties(
-    poclcc PROPERTIES BUILD_WITH_INSTALL_RPATH OFF
-                      INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-endif()
-
 install(TARGETS "poclcc" RUNTIME
         DESTINATION "${POCL_INSTALL_PUBLIC_BINDIR}" COMPONENT "poclcc")
 

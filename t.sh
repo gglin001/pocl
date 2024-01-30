@@ -11,12 +11,17 @@ micromamba activate pocl
 bash c.sh
 
 # test
-# build/install/bin/poclcc -l
+# POCL_DEBUG=ALL build/bin/poclcc -l
 poclcc -l
 
-# > poclcc -l
-# LIST OF DEVICES:
-# 0:
-#   Vendor:   ARM
-#     Name:   cpu
-#  Version:   OpenCL 3.0 PoCL HSTR: cpu-arm64-apple-macosx14.0.0-cyclone
+# `lib/CL/pocl_debug.h`
+POCL_DEBUG=ALL build/examples/matadd/matadd
+POCL_DEBUG=GENERAL build/examples/matadd/matadd
+POCL_DEBUG=LLVM build/examples/matadd/matadd
+
+# misc
+rm -f build/llvm_link_test_*
+rm -f build/compile_test_*
+rm -f build/clang_link_test_*
+rm -f compile_test_*.bc
+rm -f compile_test_*.o
