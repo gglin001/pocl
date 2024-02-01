@@ -11,7 +11,7 @@ cmake \
   -DCMAKE_PREFIX_PATH=$CONDA_PREFIX \
   -DOPENCL_H=$CONDA_PREFIX/include/CL/opencl.h -DOPENCL_HPP=$CONDA_PREFIX/include/CL/opencl.hpp \
   -DWITH_LLVM_CONFIG=$CONDA_PREFIX/bin/llvm-config -DLLVM_SPIRV=$CONDA_PREFIX/bin/llvm-spirv \
-  -DKERNELLIB_HOST_CPU_VARIANTS="generic" -DLLC_HOST_CPU=cortex-a35 -DCLANG_MARCH_FLAG="-mcpu=" \
+  -DKERNELLIB_HOST_CPU_VARIANTS="generic" -DLLC_HOST_CPU="generic" -DCLANG_MARCH_FLAG="-mcpu=" \
   -S $PWD -B $PWD/build
 
 cmake --build $PWD/build --config Debug --target install --

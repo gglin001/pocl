@@ -10,6 +10,7 @@ micromamba activate pocl
 
 micromamba install -y clangdev=16 llvmdev=16
 micromamba install -y llvm-spirv libhwloc pkg-config cmake ninja
+# optional, skip if just pocl is used
 micromamba install -y ocl-icd clhpp
 
 micromamba activate pocl
