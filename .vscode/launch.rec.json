@@ -8,7 +8,8 @@
       "type": "lldb",
       "request": "launch",
       "name": "Debug",
-      "program": "${command:cmake.getLaunchTargetPath}",
+      "program": "build/examples/example2a/example2a",
+      // "program": "${command:cmake.getLaunchTargetPath}",
       // "program": "${workspaceFolder}/build/install/bin/poclcc",
       // "args": [
       //   "-l",
@@ -18,7 +19,14 @@
         "POCL_DEBUG": "ALL",
         // "POCL_DEBUG": "GENERAL",
         // "POCL_DEBUG": "LLVM",
-      }
+        "POCL_AFFINITY": "1",
+        "POCL_DEVICES": "cpu-minimal",
+        "LD_LIBRARY_PATH": "/root/micromamba/envs/pocl/lib",
+        "POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES": "1",
+        "POCL_CACHE_DIR": "${workspaceFolder}/demos/pocl_cache",
+        // "POCL_DEBUG_LLVM_PASSES": "1",
+      },
+      "terminal": "console",
     }
   ]
 }
