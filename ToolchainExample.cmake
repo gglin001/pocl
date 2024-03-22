@@ -35,16 +35,18 @@
 
 SET(CMAKE_SYSTEM_NAME Linux)
 
+# /opt/riscv_llvm_glibc
+
 # specify the cross compiler
-SET(CMAKE_C_COMPILER   /usr/bin/arm-linux-gnueabihf-gcc)
-SET(CMAKE_CXX_COMPILER /usr/bin/arm-linux-gnueabihf-g++)
+SET(CMAKE_C_COMPILER   /opt/riscv_llvm_glibc/bin/riscv64-unknown-linux-gnu-gcc)
+SET(CMAKE_CXX_COMPILER /opt/riscv_llvm_glibc/bin/riscv64-unknown-linux-gnu-g++)
 
 # should work, but does not yet. Instead set FIND_ROOT below
 # set(CMAKE_SYSROOT /home/a/zynq/ZYNQ_ROOT)
 # where is the target environment
-SET(CMAKE_FIND_ROOT_PATH  /path/to/target_ROOT)
+# SET(CMAKE_FIND_ROOT_PATH  /path/to/target_ROOT)
 # where to find libraries in target environment
-SET(CMAKE_LIBRARY_PATH /path/to/target_ROOT/usr/lib/arm-linux-gnueabihf)
+# SET(CMAKE_LIBRARY_PATH /path/to/target_ROOT/usr/lib/arm-linux-gnueabihf)
 
 
 # search for programs in the build host directories

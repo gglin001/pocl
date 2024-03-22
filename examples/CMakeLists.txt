@@ -59,6 +59,7 @@ add_subdirectory("trig")
 add_subdirectory("vecadd")
 add_subdirectory("matadd")
 add_subdirectory("boxadd")
+add_subdirectory("enumopencl")
 add_subdirectory("EinsteinToolkit")
 
 set(GIT_OPTIONS GIT_SHALLOW ON)
