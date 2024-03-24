@@ -1015,10 +1015,14 @@ endif()
 
 ######################################################################################
 
-set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
-set(THREADS_PREFER_PTHREAD_FLAG TRUE)
-find_package(Threads REQUIRED)
-set(PTHREAD_LIBRARY Threads::Threads)
+if(ENABLE_PTHREAD)
+  set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+  set(THREADS_PREFER_PTHREAD_FLAG TRUE)
+  find_package(Threads REQUIRED)
+  set(PTHREAD_LIBRARY Threads::Threads)
+else()
+  set(PTHREAD_LIBRARY "")
+endif()
 
 ######################################################################################
 # LTTNG
@@ -1464,6 +1468,15 @@ string(REGEX REPLACE "[\r\n\t ]+" "\", \"" HOST_LD_FLAGS_ARRAY "${HOST_LD_FLAGS_
 
 set(HOST_CLANG_FLAGS "${DEFAULT_HOST_CLANG_FLAGS} ${EXTRA_HOST_CLANG_FLAGS}")
 set(HOST_LLC_FLAGS "${DEFAULT_HOST_LLC_FLAGS} ${EXTRA_HOST_LLC_FLAGS}")
+
+if(ENABLE_HOST_CPU_BASIC_ONLY)
+  set(OCL_TARGETS "host")
+  set(OCL_DRIVERS "basic")
+  # TODO OCL_KERNEL_TARGET -> CPU_TARGET_TRIPLE
+  set(OCL_KERNEL_TARGET "${LLC_TRIPLE}") #The kernel target triplet.
+  set(OCL_KERNEL_TARGET_CPU "${SELECTED_HOST_CPU}") #The kernel target CPU variant.
+  set(BUILD_BASIC 1)
+endif()
 
 if(ENABLE_HOST_CPU_DEVICES)
   set(OCL_TARGETS "host")

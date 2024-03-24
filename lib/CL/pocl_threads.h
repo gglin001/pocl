@@ -97,15 +97,12 @@ extern "C"
 /* Generic functionality for handling different types of
    OpenCL (host) objects. */
 
-#define POCL_LOCK(__LOCK__) PTHREAD_CHECK (pthread_mutex_lock (&(__LOCK__)))
-#define POCL_UNLOCK(__LOCK__)                                                 \
-  PTHREAD_CHECK (pthread_mutex_unlock (&(__LOCK__)))
-#define POCL_INIT_LOCK(__LOCK__)                                              \
-  PTHREAD_CHECK (pthread_mutex_init (&(__LOCK__), NULL))
+#define POCL_LOCK(__LOCK__) (void)(__LOCK__)
+#define POCL_UNLOCK(__LOCK__) (void)(__LOCK__)
+#define POCL_INIT_LOCK(__LOCK__) (void)(__LOCK__)
 /* We recycle OpenCL objects by not actually freeing them until the
    very end. Thus, the lock should not be destroyed at the refcount 0. */
-#define POCL_DESTROY_LOCK(__LOCK__)                                           \
-  PTHREAD_CHECK (pthread_mutex_destroy (&(__LOCK__)))
+#define POCL_DESTROY_LOCK(__LOCK__) (void)(__LOCK__)
 
 /* If available, use an Adaptive mutex for locking in the pthread driver,
    otherwise fallback to simple mutexes */
@@ -131,13 +128,12 @@ extern "C"
 
 #define POCL_FAST_DESTROY(l) POCL_DESTROY_LOCK (l)
 
-#define POCL_INIT_COND(c) PTHREAD_CHECK (pthread_cond_init (&c, NULL))
-#define POCL_DESTROY_COND(c) PTHREAD_CHECK (pthread_cond_destroy (&c))
-#define POCL_SIGNAL_COND(c) PTHREAD_CHECK (pthread_cond_signal (&c))
-#define POCL_BROADCAST_COND(c) PTHREAD_CHECK (pthread_cond_broadcast (&c))
-#define POCL_WAIT_COND(c, m) PTHREAD_CHECK (pthread_cond_wait (&c, &m))
-#define POCL_TIMEDWAIT_COND(c, m, t)                                          \
-  PTHREAD_CHECK2 (ETIMEDOUT, pthread_cond_timedwait (&c, &m, &t))
+#define POCL_INIT_COND(c) (void)(c)
+#define POCL_DESTROY_COND(c) (void)(c)
+#define POCL_SIGNAL_COND(c) (void)(c)
+#define POCL_BROADCAST_COND(c) (void)(c)
+#define POCL_WAIT_COND(c, m) (void)(c, m)
+#define POCL_TIMEDWAIT_COND(c, m, t) (void)(c, m, t)
 
 #define POCL_CREATE_THREAD(thr, func, arg)                                    \
   PTHREAD_CHECK (pthread_create (&thr, NULL, func, arg))

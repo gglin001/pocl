@@ -38,8 +38,10 @@ SET(CMAKE_SYSTEM_NAME Linux)
 # /opt/riscv_llvm_glibc
 
 # specify the cross compiler
-SET(CMAKE_C_COMPILER   /opt/riscv_llvm_glibc/bin/riscv64-unknown-linux-gnu-gcc)
-SET(CMAKE_CXX_COMPILER /opt/riscv_llvm_glibc/bin/riscv64-unknown-linux-gnu-g++)
+# SET(CMAKE_C_COMPILER   /opt/riscv_llvm_glibc/bin/riscv64-unknown-linux-gnu-gcc)
+# SET(CMAKE_CXX_COMPILER /opt/riscv_llvm_glibc/bin/riscv64-unknown-linux-gnu-g++)
+SET(CMAKE_C_COMPILER   /opt/riscv_llvm_newlib/bin/riscv64-unknown-elf-gcc)
+SET(CMAKE_CXX_COMPILER /opt/riscv_llvm_newlib/bin/riscv64-unknown-elf-g++)
 
 # should work, but does not yet. Instead set FIND_ROOT below
 # set(CMAKE_SYSROOT /home/a/zynq/ZYNQ_ROOT)

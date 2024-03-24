@@ -32,6 +32,8 @@
 #    apt-get install libblas-dev liblapack-dev  liblapacke-dev  libatlas-base-dev libopenmpi-dev   subversion python-numpy python-mako
 #
 
+return()
+
 set_opencl_header_includes()
 
 # DOWNLOAD_EXTRACT_TIMESTAMP option to ExternalProject
