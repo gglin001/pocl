@@ -1,12 +1,26 @@
+docker run -d -it \
+  --name pocl_dev_0 \
+  -v $PWD/../:/repos \
+  -w /repos \
+  base:latest
+
 micromamba env create -n pocl python=3.11
 
 micromamba activate pocl
 
 micromamba install -y clangdev=16 llvmdev=16
-micromamba install -y llvm-spirv libhwloc ld64 compilers pkg-config cmake make
-micromamba install -y khronos-opencl-icd-loader clhpp
+micromamba install -y llvm-spirv libhwloc pkg-config cmake ninja
+# optional, skip if just pocl is used
+micromamba install -y ocl-icd clhpp
 
 micromamba activate pocl
+
+cat >>~/.bashrc <<-EOF
+micromamba activate pocl
+export PATH=\$PATH:\${EXT_PATH}
+export PYTHONPATH=\$PYTHONPATH:\${EXT_PYTHONPATH}
+export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$CONDA_PREFIX/lib
+EOF
 
 bash c.sh
 
@@ -25,3 +39,7 @@ rm -f build/compile_test_*
 rm -f build/clang_link_test_*
 rm -f compile_test_*.bc
 rm -f compile_test_*.o
+
+# misc
+micromamba install patchelf
+patchelf --print-rpath build/bin/poclcc

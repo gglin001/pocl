@@ -19,14 +19,15 @@
         "POCL_DEBUG": "ALL",
         // "POCL_DEBUG": "GENERAL",
         // "POCL_DEBUG": "LLVM",
-        "POCL_CACHE_DIR": "${workspaceFolder}/demos/pocl_cache",
-        // "POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES": "1",
-        "POCL_CPU_MAX_CU_COUNT": "1",
-        "POCL_EXTRA_BUILD_FLAGS": "-g -cl-opt-disable",
-        "ZDOTDIR": "${workspaceFolder}/.vscode/zdotdir",
+        "POCL_AFFINITY": "1",
+        "POCL_DEVICES": "cpu-minimal",
+        // "LD_LIBRARY_PATH": "/root/micromamba/envs/pocl/lib",
+        "POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES": "1",
+        "POCL_CACHE_DIR": "${workspaceFolder}/_demos/pocl_cache",
+        // "POCL_CPU_MAX_CU_COUNT": "1",
+        // "POCL_EXTRA_BUILD_FLAGS": "-g -cl-opt-disable",
       },
-      "terminal": "integrated",
-      // "terminal": "console",
+      "terminal": "console",
     }
   ]
 }
