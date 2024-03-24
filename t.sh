@@ -1,28 +1,23 @@
-docker run -d -it \
-  --name pocl_dev_0 \
-  -v $PWD/../:/repos \
-  -w /repos \
-  base:latest
-
-micromamba env create -n pocl python=3.11
-
-micromamba activate pocl
-
-micromamba install -y clangdev=16 llvmdev=16
-micromamba install -y llvm-spirv libhwloc pkg-config cmake ninja
-# optional, skip if just pocl is used
-micromamba install -y ocl-icd clhpp
-
-micromamba activate pocl
-
 cat >>~/.bashrc <<-EOF
-micromamba activate pocl
 export PATH=\$PATH:\${EXT_PATH}
 export PYTHONPATH=\$PYTHONPATH:\${EXT_PYTHONPATH}
 export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$CONDA_PREFIX/lib
 EOF
 
-bash c.sh
+###############################################################################
+
+cmake \
+  -DCMAKE_BUILD_TYPE=Debug \
+  -DCMAKE_INSTALL_PREFIX=$PWD/build/install \
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+  -DDEVELOPER_MODE=ON \
+  -DENABLE_ICD=OFF \
+  -DKERNELLIB_HOST_CPU_VARIANTS="generic" -DLLC_HOST_CPU="generic" -DCLANG_MARCH_FLAG="-mcpu=" \
+  -S $PWD -B $PWD/build
+
+cmake --build $PWD/build --config Debug --target install --
+
+###############################################################################
 
 # test
 # POCL_DEBUG=ALL build/bin/poclcc -l
