@@ -1,34 +1,10 @@
 {
-    // http://portablecl.org/docs/html/debug.html
     "terminal.integrated.env.linux": {
         "EXT_PATH": "${workspaceFolder}/build/bin",
         "POCL_DEBUG": "all",
-        "POCL_CACHE_DIR": "${workspaceFolder}/demos/pocl_cache",
         "POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES": "1",
-        "POCL_CPU_MAX_CU_COUNT": "1",
-        "POCL_EXTRA_BUILD_FLAGS": "-g -cl-opt-disable",
-    },
-    "terminal.integrated.env.osx": {
-        "EXT_PATH": "${workspaceFolder}/build/bin",
-        "POCL_DEBUG": "all",
-        "POCL_CACHE_DIR": "${workspaceFolder}/demos/pocl_cache",
-        "POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES": "1",
-        "POCL_CPU_MAX_CU_COUNT": "1",
-        "POCL_EXTRA_BUILD_FLAGS": "-g -cl-opt-disable",
+        "POCL_CACHE_DIR": "${workspaceFolder}/_demos/pocl_cache",
     },
     "files.trimTrailingWhitespace": false,
     "files.insertFinalNewline": false,
-    "terminal.integrated.profiles.osx": {
-        "zsh_conda": {
-            "path": "/bin/zsh",
-            "args": [
-                "-l",
-                // "-v",
-            ],
-            "env": {
-                "ZDOTDIR": "${workspaceFolder}/.vscode/zdotdir",
-            }
-        },
-    },
-    "terminal.integrated.defaultProfile.osx": "zsh_conda",
 }
