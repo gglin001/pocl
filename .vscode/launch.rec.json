@@ -5,28 +5,34 @@
   "version": "0.2.0",
   "configurations": [
     {
+      // "type": "gdb",
+      // "request": "launch",
+      // "name": "gdb launch",
+      // "target": "${workspaceFolder}/build/install/bin/poclcc",
+      // "arguments": "-o _demos/example.pocl examples/example0/example0.cl",
+      // "cwd": "${workspaceRoot}",
+      // "valuesFormatting": "parseText"
+    },
+    {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug",
-      "program": "${command:cmake.getLaunchTargetPath}",
+      "name": "lldb launch",
       // "program": "build/examples/example2a/example2a",
-      // "program": "${workspaceFolder}/build/install/bin/poclcc",
-      // "args": [
-      //   "-l",
-      // ],
-      "cwd": "${workspaceFolder}",
+      "program": "${workspaceFolder}/build/install/bin/poclcc",
+      "args": [
+        "-l",
+      ],
       "env": {
         "POCL_DEBUG": "ALL",
         // "POCL_DEBUG": "GENERAL",
         // "POCL_DEBUG": "LLVM",
         "POCL_AFFINITY": "1",
         "POCL_DEVICES": "cpu-minimal",
-        // "LD_LIBRARY_PATH": "/root/micromamba/envs/pocl/lib",
         "POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES": "1",
         "POCL_CACHE_DIR": "${workspaceFolder}/_demos/pocl_cache",
-        // "POCL_CPU_MAX_CU_COUNT": "1",
-        // "POCL_EXTRA_BUILD_FLAGS": "-g -cl-opt-disable",
+        // "POCL_DEBUG_LLVM_PASSES": "1",
       },
+      "cwd": "${workspaceFolder}",
       "terminal": "console",
     }
   ]

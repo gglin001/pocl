@@ -1,10 +1,14 @@
 {
     "terminal.integrated.env.linux": {
         "EXT_PATH": "${workspaceFolder}/build/bin",
-        "POCL_DEBUG": "all",
+        // "POCL_DEBUG": "all",
         "POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES": "1",
         "POCL_CACHE_DIR": "${workspaceFolder}/_demos/pocl_cache",
     },
     "files.trimTrailingWhitespace": false,
     "files.insertFinalNewline": false,
+    "files.exclude": {
+        "compile_test_*.bc": true,
+        "compile_test_*.o": true,
+    }
 }
