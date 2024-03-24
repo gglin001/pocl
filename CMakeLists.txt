@@ -249,6 +249,8 @@ option(ENABLE_POCL_BUILDING "When OFF, env var POCL_BUILDING has no effect. Defa
 
 option(ENABLE_PRINTF_IMMEDIATE_FLUSH "[currently only applies to CPU drivers] if enabled, printf is flushed immediately when encountered, instead of after all NDRange workgroups are finished" ON)
 
+option(ENABLE_VSOCK "Enable vsock transport in the remote driver" OFF)
+
 if (ENABLE_PROXY_DEVICE)
   set(VISIBILITY_HIDDEN_DEFAULT OFF)
 else()
@@ -740,6 +742,21 @@ if(UNIX)
   CHECK_SYMBOL_EXISTS("dladdr"
                       "dlfcn.h"
                       HAVE_DLADDR)
+  if(ENABLE_VSOCK)
+    find_file(
+      HAVE_LINUX_VSOCK_H
+      NAMES
+        linux/vm_sockets.h
+      PATHS
+        /usr/include
+    )
+
+    if(NOT HAVE_LINUX_VSOCK_H)
+      message(FATAL_ERROR "Could not find vsock header file. Please \
+        make sure that the kernel is configured with vsock support.
+    ")
+    endif()
+  endif()
 
   unset(CMAKE_REQUIRED_DEFINITIONS)
   unset(CMAKE_REQUIRED_FLAGS)
@@ -898,9 +915,12 @@ endif()
 # constant addrspace variables, and stack protector likely slows
 # down the kernels, so it needs to be determined whether it's worth
 # the trouble.
-set(DEFAULT_KERNEL_CL_FLAGS  "-xcl -fno-stack-protector -fPIC ${FLOATCONV_FLAG} ${OPAQUE_PTR_FLAGS}")
-set(DEFAULT_KERNEL_C_FLAGS "-xc -std=c11 -D__CBUILD__ -fno-math-errno -fno-stack-protector -fPIC ${FLOATCONV_FLAG} ${OPAQUE_PTR_FLAGS}")
-set(DEFAULT_KERNEL_CXX_FLAGS "-xc++ -std=c++11 -fno-stack-protector -fPIC ${FLOATCONV_FLAG} ${OPAQUE_PTR_FLAGS}")
+#
+# no-jump-tables is to avoid LLVM optimization passes introducing switch tables,
+# which the variable uniformity analysis cannot analyze
+set(DEFAULT_KERNEL_CL_FLAGS  "-xcl -fno-stack-protector -fPIC -fno-jump-tables ${FLOATCONV_FLAG} ${OPAQUE_PTR_FLAGS}")
+set(DEFAULT_KERNEL_C_FLAGS "-xc -std=c11 -D__CBUILD__ -fno-math-errno -fno-stack-protector -fPIC -fno-jump-tables ${FLOATCONV_FLAG} ${OPAQUE_PTR_FLAGS}")
+set(DEFAULT_KERNEL_CXX_FLAGS "-xc++ -std=c++11 -fno-stack-protector -fPIC -fno-jump-tables ${FLOATCONV_FLAG} ${OPAQUE_PTR_FLAGS}")
 
 
 set(EXTRA_KERNEL_FLAGS "" CACHE STRING "Extra arguments to all kernel compilation commands (defaults to empty)")
@@ -1315,10 +1335,14 @@ cl_exp_pinned_buffers")
 set(HOST_DEVICE_FEATURES_30 "__opencl_c_3d_image_writes  __opencl_c_images \
 __opencl_c_atomic_order_acq_rel __opencl_c_atomic_order_seq_cst \
 __opencl_c_atomic_scope_device __opencl_c_program_scope_global_variables \
-__opencl_c_atomic_scope_all_devices __opencl_c_generic_address_space")
+__opencl_c_atomic_scope_all_devices __opencl_c_generic_address_space \
+__opencl_c_work_group_collective_functions")
 
 # Host CPU device: extensions only enabled when conformance is OFF
 if(NOT ENABLE_CONFORMANCE)
+  set(HOST_DEVICE_EXTENSIONS "${HOST_DEVICE_EXTENSIONS} \
+      cl_pocl_svm_rect cl_pocl_command_buffer_svm \
+      cl_pocl_command_buffer_host_buffer")
   set(HOST_DEVICE_EXTENSIONS "${HOST_DEVICE_EXTENSIONS} cl_khr_subgroup_ballot \
 cl_khr_subgroup_shuffle cl_intel_subgroups cl_intel_subgroups_short \
 cl_ext_float_atomics cl_intel_required_subgroup_size")
@@ -1660,8 +1684,8 @@ if(ENABLE_TCE)
   set(TCE_DEVICE_CL_VERSION "120")
   set(TCE_DEVICE_CL_STD "1.2")
 
-  if(LLVM_VERSION VERSION_GREATER_EQUAL 17.0)
-    message(FATAL_ERROR "OpenASIP requires LLVM/Clang <= 16")
+  if(LLVM_VERSION VERSION_GREATER_EQUAL 18.0)
+    message(FATAL_ERROR "OpenASIP requires LLVM/Clang <= 17")
   endif()
 
   if("${LLVM_CXXFLAGS}" MATCHES "-fno-rtti")

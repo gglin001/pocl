@@ -482,6 +482,26 @@ struct pocl_device_ops {
                        size_t *__restrict__ sizes);
   void (*svm_advise) (cl_device_id dev, const void *svm_ptr, size_t size,
                       cl_mem_advice_intel advice);
+  /* required for PoCL's command buffer extensions */
+  void (*svm_copy_rect) (cl_device_id dev,
+                         void *__restrict__ dst,
+                         const void *__restrict__ src,
+                         const size_t *dst_origin,
+                         const size_t *src_origin,
+                         const size_t *region,
+                         size_t dst_row_pitch,
+                         size_t dst_slice_pitch,
+                         size_t src_row_pitch,
+                         size_t src_slice_pitch);
+  void (*svm_fill_rect) (cl_device_id dev,
+                         void *__restrict__ svm_ptr,
+                         const size_t *origin,
+                         const size_t *region,
+                         size_t row_pitch,
+                         size_t slice_pitch,
+                         void *__restrict__ pattern,
+                         size_t pattern_size);
+
   /* USM Ops (Intel) */
   void *(*usm_alloc) (cl_device_id dev, unsigned alloc_type,
                       cl_mem_alloc_flags_intel flags, size_t size, cl_int *errcode);
@@ -657,8 +677,8 @@ struct pocl_device_ops {
   int (*init_queue) (cl_device_id device, cl_command_queue queue);
   int (*free_queue) (cl_device_id device, cl_command_queue queue);
 
-  /* Optional. if the driver needs to use hardware resources
-   * for contexts, it should use these callbacks */
+  /* Optional. if the driver needs to use per-context resources,
+   * it should use these callbacks for management. */
   int (*init_context) (cl_device_id device, cl_context context);
   int (*free_context) (cl_device_id device, cl_context context);
 
@@ -833,6 +853,7 @@ struct _cl_device_id {
   size_t preferred_wg_size_multiple;
   cl_bool non_uniform_work_group_support;
   cl_bool generic_as_support;
+  cl_bool wg_collective_func_support;
   cl_uint preferred_vector_width_char;
   cl_uint preferred_vector_width_short;
   cl_uint preferred_vector_width_int;
@@ -1149,7 +1170,7 @@ struct _pocl_svm_ptr
   void *svm_ptr;
   size_t size;
   /* A CL_MEM_PINNED cl_mem with device and host ptr the same. This is for
-     internal book keeping and automated migration purposes. */
+     internal bookkeeping and automated buffer migration purposes. */
   cl_mem shadow_cl_mem;
   struct _pocl_svm_ptr *prev, *next;
 };
@@ -1193,7 +1214,7 @@ struct _cl_context {
 
   /* for enqueueing migration commands. Two reasons:
    * 1) since migration commands can execute in parallel
-   * to other commands, we can increase paralelism
+   * to other commands, we can increase parallelism
    * 2) in some cases (migration between 2 devices through
    * host memory), we need to put two commands in two queues,
    * and the clEnqueueX only gives us one (on the destination
@@ -1208,7 +1229,7 @@ struct _cl_context {
    */
   size_t min_buffer_alignment;
 
-  /* list of destructor callbacks */
+  /* List of destructor callbacks */
   context_destructor_callback_t *destructor_callbacks;
 
   /* list of SVM & USM allocations */
