@@ -85,3 +85,4 @@ cmake-build-*/
 
 .cache
 .vscode/
+core
