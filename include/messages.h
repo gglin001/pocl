@@ -45,7 +45,7 @@ extern "C"
 
 #define MAX_PACKED_STRING_LEN 1024
 
-#define SESSION_ID_LENGTH 16
+#define AUTHKEY_LENGTH 16
 
 #define STRING_TYPE(x) char x[MAX_PACKED_STRING_LEN]
 
@@ -86,6 +86,8 @@ extern "C"
 
   enum RequestMessageType
   {
+    MessageType_InvalidRequest,
+    MessageType_CreateOrAttachSession,
     MessageType_ServerInfo,
     MessageType_DeviceInfo,
     MessageType_ConnectPeer,
@@ -110,8 +112,11 @@ extern "C"
     MessageType_BuildProgramFromBinary,
     MessageType_BuildProgramWithBuiltins,
     // Special message type for SPIR-V IL for now. No support for
-    // vendor-specific ILs yet.
+    // vendor-specific ILs.
     MessageType_BuildProgramFromSPIRV,
+    MessageType_CompileProgramFromSPIRV,
+    MessageType_CompileProgramFromSource,
+    MessageType_LinkProgram,
     MessageType_FreeProgram,
 
     // ***********************************************
@@ -147,6 +152,8 @@ extern "C"
 
   enum ReplyMessageType
   {
+    MessageType_InvalidReply,
+    MessageType_CreateOrAttachSessionReply,
     MessageType_ServerInfoReply,
     MessageType_DeviceInfoReply,
     MessageType_ConnectPeerReply,
@@ -204,10 +211,23 @@ extern "C"
     ImgFormatType_t formats[MAX_IMAGE_FORMAT_TYPES];
   } ImgFormatInfo_t;
 
-  typedef struct __attribute__ ((packed, aligned (8))) ServerInfoMsg_s
+  typedef struct __attribute__ ((packed, aligned (8)))
+  CreateOrAttachSessionMsg_s
   {
-    uint32_t peer_id;
-  } ServerInfoMsg_t;
+    uint64_t peer_id;
+    uint16_t peer_port;
+    uint8_t use_rdma;
+    uint8_t fast_socket;
+  } CreateOrAttachSessionMsg_t;
+
+  typedef struct __attribute__ ((packed, aligned (8)))
+  CreateOrAttachSessionReply_s
+  {
+    uint64_t session;
+    uint8_t authkey[AUTHKEY_LENGTH];
+    uint16_t peer_port;
+    uint8_t use_rdma;
+  } CreateOrAttachSessionReply_t;
 
   typedef struct __attribute__ ((packed, aligned (8))) DeviceInfo_s
   {
@@ -312,7 +332,8 @@ extern "C"
   typedef struct __attribute__ ((packed, aligned (8))) ConnectPeerMsg_s
   {
     uint16_t port;
-    uint8_t session[SESSION_ID_LENGTH];
+    uint64_t session;
+    uint8_t authkey[AUTHKEY_LENGTH];
     char address[MAX_REMOTE_PARAM_LENGTH + 1];
   } ConnectPeerMsg_t;
 
@@ -541,6 +562,9 @@ extern "C"
   {
     uint64_t payload_size;
     uint64_t options_len;
+    // nonzero, if the program's memory accesses should be offset-adjusted
+    // to match the SVM region starts in the remote device and the host
+    uint64_t svm_region_offset;
     uint32_t num_devices;
     uint32_t devices[MAX_REMOTE_DEVICES];
     uint32_t platforms[MAX_REMOTE_DEVICES];
@@ -572,8 +596,19 @@ extern "C"
     uint64_t pod_arg_size;
   } RunKernelMsg_t;
 
+  /* ########################## */
+
+  typedef struct __attribute__ ((packed, aligned (8))) PeerHandshake_s
+  {
+    uint64_t peer_id;
+  } PeerHandshake_t;
+
+  /* ########################## */
+
   typedef struct __attribute__ ((packed, aligned (8))) RequestMsg_s
   {
+    uint64_t session;
+    uint8_t authkey[AUTHKEY_LENGTH];
     uint64_t msg_id;
     uint64_t event_id;
     uint32_t pid;
@@ -587,8 +622,9 @@ extern "C"
 
     union
     {
-      ServerInfoMsg_t server_info;
+      CreateOrAttachSessionMsg_t get_session;
       ConnectPeerMsg_t connect_peer;
+      PeerHandshake_t peer_handshake;
 
       CreateBufferMsg_t create_buffer;
       CreateSamplerMsg_t create_sampler;
@@ -713,28 +749,11 @@ extern "C"
     uint64_t server_write_start_timestamp_ns;
     union
     {
+      CreateOrAttachSessionReply_t get_session;
+      PeerHandshake_t peer_handshake;
       CreateBufferReply_t create_buffer;
     } m;
   } ReplyMsg_t;
-
-  /* ########################## */
-
-  typedef struct __attribute__ ((packed, aligned (8))) PeerHandshake_s
-  {
-    uint64_t msg_id;
-    uint32_t message_type;
-    uint32_t peer_id;
-    uint8_t session[SESSION_ID_LENGTH];
-  } PeerHandshake_t;
-
-  /* ########################## */
-
-  typedef struct __attribute__ ((packed, aligned (8))) ClientHandshake_s
-  {
-    uint8_t session_id[SESSION_ID_LENGTH];
-    uint16_t peer_port;
-    uint8_t rdma_supported;
-  } ClientHandshake_t;
 
   /* ########################## */
 
@@ -744,8 +763,14 @@ extern "C"
     size_t body;
     switch (message_type)
       {
+      case MessageType_CreateOrAttachSession:
+        body = sizeof (CreateOrAttachSessionMsg_t);
+        break;
       case MessageType_ConnectPeer:
         body = sizeof (ConnectPeerMsg_t);
+        break;
+      case MessageType_PeerHandshake:
+        body = sizeof (PeerHandshake_t);
         break;
 
       case MessageType_CreateBuffer:
@@ -773,7 +798,10 @@ extern "C"
       case MessageType_BuildProgramFromSource:
       case MessageType_BuildProgramFromBinary:
       case MessageType_BuildProgramFromSPIRV:
+      case MessageType_CompileProgramFromSource:
+      case MessageType_CompileProgramFromSPIRV:
       case MessageType_BuildProgramWithBuiltins:
+      case MessageType_LinkProgram:
         body = sizeof (BuildProgramMsg_t);
         break;
 

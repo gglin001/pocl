@@ -116,7 +116,8 @@ ExternalProject_Add(
   ${TS_NAME}
   PREFIX "${TS_BASEDIR}"
   GIT_REPOSITORY "${CTS_GIT_REPO}"
-        GIT_TAG "${CTS_GIT_TAG}"
+  GIT_TAG "${CTS_GIT_TAG}"
+  ${GIT_OPTIONS}
   CONFIGURE_COMMAND ${CMAKE_COMMAND}
     ${UPSTREAM_CMAKE_ARGS}
     -DD3D10_IS_SUPPORTED=0 -DD3D11_IS_SUPPORTED=0
@@ -917,6 +918,7 @@ set(CTS_MICRO_LIST
     "${TS_NAME}${TS_SUFFIX}_buffers_micro_var2"
     "${TS_NAME}${TS_SUFFIX}_buffers_micro_map_read"
     "${TS_NAME}${TS_SUFFIX}_buffers_micro_map_write"
+    "${TS_NAME}${TS_SUFFIX}_cl_khr_command_buffer"
     "${TS_NAME}${TS_SUFFIX}_commonfns"
     "${TS_NAME}${TS_SUFFIX}_compiler_micro"
     "${TS_NAME}${TS_SUFFIX}_computeinfo"

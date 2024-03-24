@@ -286,8 +286,7 @@ To install lttng on Ubuntu, run this as root / sudo::
 
      apt install lttng-tools lttng-modules-dkms liblttng-ust-dev liblttng-ctl-dev
 
-You must now rebuild pocl. It should pick up LTTNG automatically, if it does not,
-clean the build directory and rerun cmake.
+You must now run cmake with ``-DENABLE_LTTNG=YES`` and rebuild pocl.
 
 
 Using LTTNG
@@ -341,7 +340,7 @@ or possibly other tools.
 
 Viewing Traces
 ~~~~~~~~~~~~~~
-For this you'll need chrome/chromium, ruby and babeltrace installed.
+For this you'll need chrome/chromium, python and babeltrace installed.
 START_TIME and END_TIME are optional - they define a time
 slice to pick from the log. If not defined, the entire
 trace log will be converted to JSON (Warning : large logs can be a problem).
@@ -350,7 +349,7 @@ To convert binary LTTNG trace format to text, then to JSON, run::
 
     cd $HOME/lttng-traces/<session-name>-<date>-<time>
     babeltrace --clock-seconds . >/tmp/trace.text
-    ruby <pocl_source>/tools/scripts/babel_parse.rb -o OUTPUT_FILE [-s START_TIME] [-e END_TIME] /tmp/trace.txt [/tmp/trace2.txt ...]
+    ./<pocl_source>/tools/scripts/babel_parse.py -o OUTPUT_FILE /tmp/trace.txt
 
 To view the JSON trace, open Google Chrome/Chromium, type ``chrome://tracing``,
 click Load, and find ``/tmp/trace.json``.

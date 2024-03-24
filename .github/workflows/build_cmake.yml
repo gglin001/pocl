@@ -54,7 +54,7 @@ jobs:
             config: chipstar
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: CMake
         id: cmake
@@ -150,7 +150,7 @@ jobs:
         llvm: [16]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: CMake
         id: cmake
@@ -203,7 +203,7 @@ jobs:
         llvm: [16]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: CMake
         id: cmake
@@ -243,7 +243,7 @@ jobs:
         llvm: [16]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: CMake
         id: cmake
@@ -284,7 +284,7 @@ jobs:
         config: [cuda]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Run CMake
         id: cmake
@@ -327,7 +327,7 @@ jobs:
         config: [openasip]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Run CMake
         id: cmake
@@ -370,7 +370,7 @@ jobs:
     runs-on: [self-hosted, linux, vulkan]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Run CMake
         id: cmake
@@ -412,7 +412,7 @@ jobs:
         config: [basic]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Run CMake
         id: cmake
@@ -454,7 +454,7 @@ jobs:
         config: [level_zero]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Run CMake
         id: cmake
@@ -493,4 +493,4 @@ jobs:
           fi
           rm -rf ${{ env.POCL_CACHE_DIR }}
           mkdir ${{ env.POCL_CACHE_DIR }}
-          cd ${{ github.workspace }}/build && ${{ github.workspace }}/tools/scripts/run_level0_tests -j4 $CTEST_FLAGS -E $TEST_EXCLUDES
+          cd ${{ github.workspace }}/build && ${{ github.workspace }}/tools/scripts/run_level0_tests -j1 $CTEST_FLAGS -E $TEST_EXCLUDES
