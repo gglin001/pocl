@@ -9,6 +9,7 @@
       "request": "launch",
       "name": "Debug",
       "program": "${command:cmake.getLaunchTargetPath}",
+      // "program": "build/examples/example2a/example2a",
       // "program": "${workspaceFolder}/build/install/bin/poclcc",
       // "args": [
       //   "-l",
@@ -18,7 +19,14 @@
         "POCL_DEBUG": "ALL",
         // "POCL_DEBUG": "GENERAL",
         // "POCL_DEBUG": "LLVM",
-      }
+        "POCL_CACHE_DIR": "${workspaceFolder}/demos/pocl_cache",
+        // "POCL_LEAVE_KERNEL_COMPILER_TEMP_FILES": "1",
+        "POCL_CPU_MAX_CU_COUNT": "1",
+        "POCL_EXTRA_BUILD_FLAGS": "-g -cl-opt-disable",
+        "ZDOTDIR": "${workspaceFolder}/.vscode/zdotdir",
+      },
+      "terminal": "integrated",
+      // "terminal": "console",
     }
   ]
 }
