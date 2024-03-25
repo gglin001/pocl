@@ -31,8 +31,11 @@ args=(
   -DLLVM_LINK_TEST=ON
   -DCLANG_LINK_TEST=ON
   -DENABLE_PRINTF_IMMEDIATE_FLUSH=OFF
-  -DKERNELLIB_HOST_CPU_VARIANTS="native" -DLLC_HOST_CPU="generic-rv64" -DCLANG_MARCH_FLAG="-mcpu="
-  # -DLLC_TRIPLE="riscv64-unknown-linux-gnu" -DLLC_HOST_CPU="generic-rv64" -DCLANG_MARCH_FLAG="-mcpu="
+  # -DLLC_TRIPLE="riscv64-unknown-linux-gnu"
+  -DKERNELLIB_HOST_CPU_VARIANTS="native"
+  -DLLC_HOST_CPU="generic-rv64"
+  -DCLANG_MARCH_FLAG="-mcpu="
+  -DEXTRA_HOST_LLC_FLAGS="-mattr=+d" # not work
   -S$PWD -B$PWD/build -GNinja
 )
 cmake "${args[@]}"

@@ -19,6 +19,8 @@
 
 ###############################################################################
 
+# TODO: how to generate a riscv runtime bin in pocl from a non-riscv host?
+
 args=(
   -DCMAKE_BUILD_TYPE=Debug
   -DCMAKE_INSTALL_PREFIX=$PWD/build/install
