@@ -432,6 +432,16 @@ endif()
 
 ######################################################################################
 
+# rpath for local debug
+set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+if(APPLE)
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib;@loader_path/../lib")
+elseif(UNIX)
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib;$ORIGIN/../lib;$ORIGIN/../lib/CL;$ORIGIN")
+endif()
+
+######################################################################################
+
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 option(HARDENING_ENABLE "Enable hardening against various attacks. May worsen performance" OFF)

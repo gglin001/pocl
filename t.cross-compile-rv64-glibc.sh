@@ -28,9 +28,23 @@ cmake --build $PWD/build --target install
 args=(
   -cpu rv64,v=true,vext_spec=v1.0
   -L /opt/riscv/sysroot
-  # only runtime is built
-  build/examples/boxadd/boxadd
-  # build/examples/example0/example0
-  # build/examples/enumopencl/enumopencl
+  build/examples/enumopencl/enumopencl
 )
 qemu-riscv64 "${args[@]}"
+
+# eg:
+# 
+# Enumerated 1 platforms.
+# Platform[0]:
+#         Name:           Portable Computing Language
+#         Vendor:         The pocl project
+#         Driver Version: OpenCL 3.0 PoCL 6.0-pre allen/rv64_glibc-0-g5f7fff1d  Linux, Release, without LLVM, POCL_DEBUG
+# Device[0]:
+#         Type:           CPU 
+#         Name:           cpu
+#         Vendor:         PoCL Project
+#         Device Version: OpenCL 3.0 PoCL HSTR: cpu-00000000-(null)
+#         Device Profile: FULL_PROFILE
+#         Driver Version: 6.0-pre allen/rv64_glibc-0-g5f7fff1d
+# Done.
+# 
