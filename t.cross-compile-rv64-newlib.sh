@@ -1,3 +1,5 @@
+# WIP, terget: buil cpu-minimum only(no pthread and other extra libs)
+
 args=(
   -DCMAKE_BUILD_TYPE=Release
   -DCMAKE_INSTALL_PREFIX=$PWD/build/install

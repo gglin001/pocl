@@ -32,14 +32,15 @@
 #    apt-get install libblas-dev liblapack-dev  liblapacke-dev  libatlas-base-dev libopenmpi-dev   subversion python-numpy python-mako
 #
 
-return()
-
 set_opencl_header_includes()
 
 # DOWNLOAD_EXTRACT_TIMESTAMP option to ExternalProject
 if(POLICY CMP0135)
   cmake_policy(SET CMP0135 NEW)
 endif()
+
+add_subdirectory("enumopencl")
+return()
 
 # clang flags for SPIR compilation
 # -Xclang -finclude-default-header is required for LLVM < 13 to include opencl-c-base.h and opencl-c.h
@@ -61,7 +62,6 @@ add_subdirectory("trig")
 add_subdirectory("vecadd")
 add_subdirectory("matadd")
 add_subdirectory("boxadd")
-add_subdirectory("enumopencl")
 add_subdirectory("EinsteinToolkit")
 
 set(GIT_OPTIONS GIT_SHALLOW ON)
