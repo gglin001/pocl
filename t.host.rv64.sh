@@ -34,9 +34,10 @@ args=(
   # -DENABLE_EXAMPLES=OFF
   -DDEVELOPER_MODE=ON
   -DENABLE_PRINTF_IMMEDIATE_FLUSH=OFF
-  -DCLANG_MARCH_FLAG="-mcpu="
-  -DLLC_HOST_CPU="generic-rv64"
   -DLLC_TRIPLE="riscv64-unknown-linux-gnu"
+  # -DKERNELLIB_HOST_CPU_VARIANTS="native"
+  -DLLC_HOST_CPU="generic-rv64"
+  -DCLANG_MARCH_FLAG="-mcpu="
   -S$PWD -B$PWD/build -GNinja
 )
 cmake "${args[@]}"
