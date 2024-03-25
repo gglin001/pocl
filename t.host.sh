@@ -6,14 +6,18 @@ EOF
 
 ###############################################################################
 
-cmake \
-  -DCMAKE_BUILD_TYPE=Debug \
-  -DCMAKE_INSTALL_PREFIX=$PWD/build/install \
-  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-  -DDEVELOPER_MODE=ON \
-  -DENABLE_ICD=OFF \
-  -DKERNELLIB_HOST_CPU_VARIANTS="generic" -DLLC_HOST_CPU="generic" -DCLANG_MARCH_FLAG="-mcpu=" \
+args=(
+  -DCMAKE_BUILD_TYPE=Debug
+  -DCMAKE_INSTALL_PREFIX=$PWD/build/install
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+  -DDEVELOPER_MODE=ON
+  -DENABLE_ICD=OFF
+  -DKERNELLIB_HOST_CPU_VARIANTS="generic"
+  -DLLC_HOST_CPU="generic"
+  -DCLANG_MARCH_FLAG="-mcpu="
   -S$PWD -B$PWD/build -GNinja
+)
+cmake "${args[@]}"
 
 cmake --build $PWD/build --target install
 
