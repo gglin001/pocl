@@ -15,7 +15,7 @@ cmake \
   -DKERNELLIB_HOST_CPU_VARIANTS="generic" -DLLC_HOST_CPU="generic" -DCLANG_MARCH_FLAG="-mcpu=" \
   -S$PWD -B$PWD/build -GNinja
 
-cmake --build $PWD/build --config Debug --target install --
+cmake --build $PWD/build --target install
 
 ###############################################################################
 
