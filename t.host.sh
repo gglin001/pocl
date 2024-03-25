@@ -38,3 +38,18 @@ rm -f compile_test_*.o
 # misc
 micromamba install patchelf
 patchelf --print-rpath build/bin/poclcc
+
+###############################################################################
+
+# debug
+
+llc --help >_demos/llc.help.log
+poclcc -h >_demos/poclcc.h.log
+llvm-spirv --help >_demos/llvm-spirv.help.log
+
+clang -print-targets
+llc --version
+
+llc -march=riscv64 -mattr=help
+llc -march=riscv64 -mcpu=help
+llc -march=aarch64 -mcpu=help
