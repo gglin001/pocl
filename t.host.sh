@@ -13,10 +13,10 @@ args=(
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
   -DDEVELOPER_MODE=ON
   -DENABLE_ICD=OFF
-  # -DKERNELLIB_HOST_CPU_VARIANTS="generic"
-  # -DLLC_HOST_CPU="generic"
-  -DKERNELLIB_HOST_CPU_VARIANTS="native"
-  -DLLC_HOST_CPU="native"
+  -DKERNELLIB_HOST_CPU_VARIANTS="generic"
+  -DLLC_HOST_CPU="generic"
+  # -DKERNELLIB_HOST_CPU_VARIANTS="native"
+  # -DLLC_HOST_CPU="native"
   -DCLANG_MARCH_FLAG="-mcpu="
   -S$PWD -B$PWD/build -GNinja
 )
@@ -25,6 +25,8 @@ cmake "${args[@]}"
 cmake --build $PWD/build --target install
 
 ###############################################################################
+
+# export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
 # test
 # POCL_DEBUG=ALL build/bin/poclcc -l
