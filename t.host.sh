@@ -1,7 +1,8 @@
 cat >>~/.bashrc <<-EOF
-export PATH=\$PATH:\${EXT_PATH}
-export PYTHONPATH=\$PYTHONPATH:\${EXT_PYTHONPATH}
-export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$CONDA_PREFIX/lib
+export PATH=\${EXT_PATH}:\$PATH
+export PYTHONPATH=\${EXT_PYTHONPATH}:\$PYTHONPATH
+export LD_LIBRARY_PATH=\${EXT_LD_LIBRARY_PATH}:\$LD_LIBRARY_PATH
+# export LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:\$CONDA_PREFIX/lib
 EOF
 
 ###############################################################################
