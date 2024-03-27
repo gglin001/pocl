@@ -9,12 +9,19 @@ EOF
 
 args=(
   -DCMAKE_BUILD_TYPE=Debug
+  # -DCMAKE_INSTALL_PREFIX=/opt/pocl
   -DCMAKE_INSTALL_PREFIX=$PWD/build/install
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
   -DCMAKE_C_COMPILER=/usr/bin/clang
   -DCMAKE_CXX_COMPILER=/usr/bin/clang++
+  -DCMAKE_INSTALL_RPATH=ON
+  # fixed rpaths will be set
+  -DCMAKE_INSTALL_RPATH_USE_LINK_PATH=ON
   -DDEVELOPER_MODE=ON
   -DENABLE_ICD=OFF
+  -DINSTALL_OPENCL_HEADERS=ON
+  -DENABLE_TESTS=OFF
+  -DENABLE_EXAMPLES=ON
   -DKERNELLIB_HOST_CPU_VARIANTS="generic"
   -DLLC_HOST_CPU="generic"
   # -DKERNELLIB_HOST_CPU_VARIANTS="native"
@@ -25,6 +32,12 @@ args=(
 cmake "${args[@]}"
 
 cmake --build $PWD/build --target install
+
+# only for specific env
+# patchelf --print-rpath `which poclcc`
+# patchelf --add-rpath $CONDA_PREFIX/lib `which poclcc`
+# patchelf --print-rpath build/install/lib/libOpenCL.so
+# patchelf --add-rpath $CONDA_PREFIX/lib build/install/lib/libOpenCL.so
 
 ###############################################################################
 
