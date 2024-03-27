@@ -38,6 +38,7 @@ cmake --build $PWD/build --target install
 # only for specific env
 # patchelf --print-rpath `which poclcc`
 # patchelf --add-rpath $CONDA_PREFIX/lib `which poclcc`
+# patchelf --add-rpath "\$ORIGIN/../lib:\$ORIGIN/../lib/CL" `which poclcc`
 # patchelf --print-rpath build/install/lib/libOpenCL.so
 # patchelf --add-rpath $CONDA_PREFIX/lib build/install/lib/libOpenCL.so
 # patchelf --add-rpath "\$ORIGIN/../lib:\$ORIGIN/../lib/CL" /opt/pocl/bin/poclcc
