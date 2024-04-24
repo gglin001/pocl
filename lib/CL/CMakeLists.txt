@@ -174,6 +174,7 @@ set(POCL_LIB_SOURCES  "clCreateContextFromType.c"
                    "clGetCommandBufferInfoKHR.c"
                    "clReleaseCommandBufferKHR.c"
                    "clRetainCommandBufferKHR.c"
+                   "clRemapCommandBufferKHR.c"
                    "clMemAllocINTEL.c"
                    "clMemFreeINTEL.c"
                    "clGetMemAllocInfoINTEL.c"
@@ -194,6 +195,7 @@ set(POCL_LIB_SOURCES  "clCreateContextFromType.c"
                    "clCommandWriteImagePOCL.c"
                    "clEnqueueSVMMemcpyRectPOCL.c"
                    "clEnqueueSVMMemfillRectPOCL.c"
+                   "clSetKernelArgDevicePointer.c"
 )
 
 if(ANDROID)

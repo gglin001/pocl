@@ -3,7 +3,7 @@
 
    Copyright (c) 2011-2013 Universidad Rey Juan Carlos
                  2011-2021 Pekka Jääskeläinen
-                 2022-2023 Pekka Jääskeläinen / Intel Finland Oy
+                 2022-2024 Pekka Jääskeläinen / Intel Finland Oy
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -641,12 +641,12 @@ pocl_exec_command (_cl_command_node *node)
           {
             void *ptr = cmd->svm_free.svm_pointers[i];
             POCL_LOCK_OBJ (event->context);
-            pocl_svm_ptr *tmp = NULL, *item = NULL;
-            DL_FOREACH_SAFE (event->context->svm_ptrs, item, tmp)
+            pocl_raw_ptr *tmp = NULL, *item = NULL;
+            DL_FOREACH_SAFE (event->context->raw_ptrs, item, tmp)
             {
-              if (item->svm_ptr == ptr)
+              if (item->vm_ptr == ptr)
                 {
-                  DL_DELETE (event->context->svm_ptrs, item);
+                  DL_DELETE (event->context->raw_ptrs, item);
                   break;
                 }
             }
@@ -1859,41 +1859,41 @@ pocl_setup_opencl_c_with_version (cl_device_id dev, int supports_30)
 /* this is a list of recognized extensions, not a list of reported extensions;
    the reported are stored in dev->extensions; this only for versioning */
 static const cl_name_version OPENCL_EXTENSIONS[]
-    = { { CL_MAKE_VERSION (1, 0, 0), "cl_intel_required_subgroup_size" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_intel_subgroups" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_intel_subgroups_short" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_intel_unified_shared_memory" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_byte_addressable_store" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_global_int32_base_atomics" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_global_int32_extended_atomics" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_local_int32_base_atomics" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_local_int32_extended_atomics" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_int64_base_atomics" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_int64_extended_atomics" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroups" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_extended_types" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_non_uniform_vote" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_ballot" },
-        { CL_MAKE_VERSION (1, 0, 0),
-          "cl_khr_subgroup_non_uniform_arithmetic" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_shuffle" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_shuffle_relative" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_clustered_reduce" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_3d_image_writes" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_fp16" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_fp64" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_nv_device_attribute_query" },
-        { CL_MAKE_VERSION (2, 0, 0), "cl_khr_depth_images" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_khr_image2d_from_buffer" },
-        { CL_MAKE_VERSION (2, 1, 0), "cl_khr_il_program" },
+  = { { CL_MAKE_VERSION (1, 0, 0), "cl_intel_required_subgroup_size" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_intel_subgroups" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_intel_subgroups_short" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_intel_unified_shared_memory" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_byte_addressable_store" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_global_int32_base_atomics" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_global_int32_extended_atomics" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_local_int32_base_atomics" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_local_int32_extended_atomics" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_int64_base_atomics" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_int64_extended_atomics" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroups" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_extended_types" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_non_uniform_vote" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_ballot" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_non_uniform_arithmetic" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_shuffle" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_shuffle_relative" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_subgroup_clustered_reduce" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_3d_image_writes" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_fp16" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_fp64" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_nv_device_attribute_query" },
+      { CL_MAKE_VERSION (2, 0, 0), "cl_khr_depth_images" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_khr_image2d_from_buffer" },
+      { CL_MAKE_VERSION (2, 1, 0), "cl_khr_il_program" },
 
-        { CL_MAKE_VERSION (0, 9, 4), "cl_khr_command_buffer" },
-        { CL_MAKE_VERSION (1, 0, 0), "cl_ext_float_atomics" },
-        { CL_MAKE_VERSION (0, 1, 0), CL_POCL_PINNED_BUFFERS_EXTENSION_NAME },
-        { CL_MAKE_VERSION (0, 9, 0), "cl_pocl_svm_rect" },
-        { CL_MAKE_VERSION (0, 9, 0), "cl_pocl_command_buffer_svm" },
-        { CL_MAKE_VERSION (0, 9, 0), "cl_pocl_command_buffer_host_buffer" },
-        { CL_MAKE_VERSION (0, 9, 0), "cl_pocl_command_buffer_host_exec" } };
+      { CL_MAKE_VERSION (0, 9, 4), "cl_khr_command_buffer" },
+      { CL_MAKE_VERSION (0, 9, 1), "cl_khr_command_buffer_multi_device" },
+      { CL_MAKE_VERSION (1, 0, 0), "cl_ext_float_atomics" },
+      { CL_MAKE_VERSION (0, 1, 0), "cl_ext_buffer_device_address" },
+      { CL_MAKE_VERSION (0, 9, 0), "cl_pocl_svm_rect" },
+      { CL_MAKE_VERSION (0, 9, 0), "cl_pocl_command_buffer_svm" },
+      { CL_MAKE_VERSION (0, 9, 0), "cl_pocl_command_buffer_host_buffer" },
+      { CL_MAKE_VERSION (0, 9, 0), "cl_pocl_command_buffer_host_exec" } };
 
 const size_t OPENCL_EXTENSIONS_NUM
     = sizeof (OPENCL_EXTENSIONS) / sizeof (OPENCL_EXTENSIONS[0]);

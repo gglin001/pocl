@@ -1,12 +1,14 @@
 /* OpenCL runtime library: pocl_util utility functions
 
    Copyright (c) 2012-2019 Pekka Jääskeläinen
+                 2020-2024 PoCL Developers
+                 2024 Pekka Jääskeläinen / Intel Finland Oy
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
-   of this software and associated documentation files (the "Software"), to deal
-   in the Software without restriction, including without limitation the rights
-   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-   copies of the Software, and to permit persons to whom the Software is
+   of this software and associated documentation files (the "Software"), to
+   deal in the Software without restriction, including without limitation the
+   rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+   sell copies of the Software, and to permit persons to whom the Software is
    furnished to do so, subject to the following conditions:
 
    The above copyright notice and this permission notice shall be included in
@@ -16,9 +18,9 @@
    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-   THE SOFTWARE.
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+   IN THE SOFTWARE.
 */
 
 #include <errno.h>
@@ -502,6 +504,9 @@ pocl_create_event (cl_event *event, cl_command_queue command_queue,
 
   (*event)->context = context;
   (*event)->queue = command_queue;
+  if (command_queue)
+    (*event)->profiling_available
+      = (command_queue->properties & CL_QUEUE_PROFILING_ENABLE) ? 1 : 0;
 
   /* user events have a NULL command queue, don't retain it */
   if (command_queue)
@@ -529,6 +534,24 @@ pocl_create_event (cl_event *event, cl_command_queue command_queue,
                          pocl_command_to_str (command_type));
 
   return CL_SUCCESS;
+}
+
+static int
+check_for_circular_dep (cl_event waiting_event, cl_event notifier_event)
+{
+  event_node *wait_list_item = NULL;
+  LL_FOREACH (notifier_event->wait_list, wait_list_item)
+  {
+    if (wait_list_item->event == waiting_event)
+      {
+        POCL_MSG_ERR ("Circular event dependency detected!\n");
+        abort ();
+        return 1;
+      }
+    else if (check_for_circular_dep (waiting_event, wait_list_item->event))
+      return 1;
+  }
+  return 0;
 }
 
 static int
@@ -564,6 +587,8 @@ pocl_create_event_sync (cl_event waiting_event, cl_event notifier_event)
   wait_list_item = pocl_mem_manager_new_event_node();
   if (!notify_target || !wait_list_item)
     return CL_OUT_OF_HOST_MEMORY;
+
+  /* check_for_circular_dep (waiting_event, notifier_event); */
 
   notify_target->event = waiting_event;
   wait_list_item->event = notifier_event;
@@ -605,7 +630,7 @@ can_run_command (cl_device_id dev, size_t num_objs, cl_mem *objs)
       assert (dev->ops->alloc_mem_obj);
       errcode = dev->ops->alloc_mem_obj (dev, objs[i], NULL);
       if (errcode != CL_SUCCESS) {
-        POCL_MSG_ERR("Failed to allocate %zx bytes on device %s\n",
+        POCL_MSG_ERR("Failed to allocate %zu bytes on device %s\n",
                      objs[i]->size, dev->short_name);
       }
 
@@ -677,6 +702,10 @@ ERROR:
 }
 
 /**
+ * Creates the necessary implicit migration commands to ensure data is
+ * where it's supposed to be according to the semantics of the program
+ * defined using commands, buffers, command queues and events.
+ *
  * @param dev Destination device
  * @param ev_export_p Optional output parameter for the export event
  * @param migration_size Max number of bytes to migrate (caller has to read
@@ -907,8 +936,6 @@ FINISH_VER_SETUP:
         }
     }
 
-  POCL_UNLOCK_OBJ (mem);
-
   /*****************************************************************/
 
   /* enqueue a command for export.
@@ -1008,14 +1035,13 @@ FINISH_VER_SETUP:
        * which only read from buffers */
       if (readonly)
         {
-          POCL_LOCK_OBJ (mem);
           mem->last_event = last_migration_event;
-          POCL_UNLOCK_OBJ (mem);
           POname (clReleaseEvent) (final_event);
         }
       else /* because explicit event */
         POname (clReleaseEvent) (last_migration_event);
     }
+  POCL_UNLOCK_OBJ (mem);
 
   return CL_SUCCESS;
 }
@@ -1170,12 +1196,43 @@ pocl_create_command (_cl_command_node **cmd, cl_command_queue command_queue,
 }
 
 cl_int
+pocl_cmdbuf_validate_queue_list (cl_uint num_queues,
+                                 const cl_command_queue *queues)
+{
+  POCL_RETURN_ERROR_COND ((num_queues == 0), CL_INVALID_VALUE);
+  POCL_RETURN_ERROR_COND ((queues == NULL), CL_INVALID_VALUE);
+
+  /* All queues must have the same OpenCL context */
+  cl_context ref_ctx = queues[0]->context;
+
+  for (unsigned i = 0; i < num_queues; ++i)
+    {
+      /* All queues must be valid Command queue objects */
+      POCL_RETURN_ERROR_COND ((!IS_CL_OBJECT_VALID (queues[i])),
+                              CL_INVALID_COMMAND_QUEUE);
+
+      POCL_RETURN_ERROR_COND ((queues[i]->device == NULL),
+                              CL_INVALID_COMMAND_QUEUE);
+
+      POCL_RETURN_ERROR_COND ((queues[i]->context == NULL),
+                              CL_INVALID_COMMAND_QUEUE);
+
+      POCL_RETURN_ERROR_COND ((queues[i]->context != ref_ctx),
+                              CL_INVALID_COMMAND_QUEUE);
+    }
+
+  return CL_SUCCESS;
+}
+
+cl_int
 pocl_cmdbuf_choose_recording_queue (cl_command_buffer_khr command_buffer,
                                     cl_command_queue *command_queue)
 {
   assert (command_queue != NULL);
   cl_command_queue q = *command_queue;
-  POCL_RETURN_ERROR_COND ((q != NULL), CL_INVALID_COMMAND_QUEUE);
+
+  POCL_RETURN_ERROR_COND ((q == NULL && command_buffer->num_queues != 1),
+                          CL_INVALID_COMMAND_QUEUE);
 
   if (q)
     {
@@ -1197,6 +1254,18 @@ pocl_cmdbuf_choose_recording_queue (cl_command_buffer_khr command_buffer,
   return CL_SUCCESS;
 }
 
+cl_command_buffer_properties_khr
+pocl_cmdbuf_get_property (cl_command_buffer_khr command_buffer,
+                          cl_command_buffer_properties_khr name)
+{
+  for (unsigned i = 0; i < command_buffer->num_properties; ++i)
+    {
+      if (command_buffer->properties[2 * i] == name)
+        return command_buffer->properties[2 * i + 1];
+    }
+  return 0;
+}
+
 cl_int
 pocl_create_recorded_command (_cl_command_node **cmd,
                               cl_command_buffer_khr command_buffer,
@@ -1211,10 +1280,24 @@ pocl_create_recorded_command (_cl_command_node **cmd,
   if (errcode != CL_SUCCESS)
     return errcode;
 
+  POCL_RETURN_ERROR_COND (
+    (can_run_command (command_queue->device, num_buffers, buffers) != CL_TRUE),
+    CL_OUT_OF_RESOURCES);
+
   *cmd = pocl_mem_manager_new_command ();
   POCL_RETURN_ERROR_COND ((*cmd == NULL), CL_OUT_OF_HOST_MEMORY);
   (*cmd)->type = command_type;
   (*cmd)->buffered = 1;
+
+  /* pocl_cmdbuf_choose_recording_queue should have been called to ensure we
+   * have a valid command queue, usually via CMDBUF_VALIDATE_COMMON_HANDLES
+   * but at that time *cmd was not allocated at that time, so find the queue
+   * index again here */
+  for (unsigned i = 0; i < command_buffer->num_queues; ++i)
+    {
+      if (command_buffer->queues[i] == command_queue)
+        (*cmd)->queue_idx = i;
+    }
 
   (*cmd)->sync.syncpoint.num_sync_points_in_wait_list = num_deps;
   if (num_deps > 0)
@@ -1283,6 +1366,8 @@ void pocl_command_enqueue (cl_command_queue command_queue,
 
   POCL_LOCK_OBJ (command_queue);
 
+  ++command_queue->command_count;
+
   /* in case of in-order queue, synchronize to previously enqueued command
      if available */
   if (!(command_queue->properties & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE))
@@ -1294,24 +1379,12 @@ void pocl_command_enqueue (cl_command_queue command_queue,
                                   command_queue->last_event.event);
         }
     }
-
-  ++command_queue->command_count;
-  /* in case of in-order queue, synchronize to previously enqueued command
-     if available */
-  if (!(command_queue->properties & CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE))
-    {
-      if (command_queue->last_event.event)
-        {
-          pocl_create_event_sync (node->sync.event.event,
-                                  command_queue->last_event.event);
-        }
-    }
-  /* Command queue is out-of-order queue. If command type is a barrier, then
-     synchronize to all previously enqueued commands to make sure they are
-     executed before the barrier. */
   else if ((node->type == CL_COMMAND_BARRIER
             || node->type == CL_COMMAND_MARKER)
            && node->command.barrier.has_wait_list == 0)
+    /* Command queue is out-of-order queue. If command type is a barrier, then
+       synchronize to all previously enqueued commands to make sure they are
+       executed before the barrier. */
     {
       POCL_MSG_PRINT_EVENTS ("Barrier; adding event syncs\n");
       DL_FOREACH (command_queue->events, event)
@@ -1867,17 +1940,35 @@ pocl_setup_context (cl_context context)
   return CL_SUCCESS;
 }
 
-pocl_svm_ptr *
-pocl_find_svm_ptr_in_context (cl_context context, const void *host_ptr)
+pocl_raw_ptr *
+pocl_find_raw_ptr_with_vm_ptr (cl_context context, const void *host_ptr)
 {
   POCL_LOCK_OBJ (context);
-  pocl_svm_ptr *item = NULL;
-  DL_FOREACH (context->svm_ptrs, item)
+  pocl_raw_ptr *item = NULL;
+  DL_FOREACH (context->raw_ptrs, item)
   {
-    if (item->svm_ptr <= host_ptr && item->svm_ptr + item->size > host_ptr)
+    if (item->vm_ptr == NULL)
+      continue;
+    if (item->vm_ptr <= host_ptr && item->vm_ptr + item->size > host_ptr)
       {
         break;
       }
+  }
+  POCL_UNLOCK_OBJ (context);
+  return item;
+}
+
+pocl_raw_ptr *
+pocl_find_raw_ptr_with_dev_ptr (cl_context context, const void *dev_ptr)
+{
+  POCL_LOCK_OBJ (context);
+  pocl_raw_ptr *item = NULL;
+  DL_FOREACH (context->raw_ptrs, item)
+  {
+    if (item->dev_ptr == NULL)
+      continue;
+    if (item->dev_ptr <= dev_ptr && item->dev_ptr + item->size > dev_ptr)
+      break;
   }
   POCL_UNLOCK_OBJ (context);
   return item;
@@ -2883,12 +2974,12 @@ pocl_svm_check_pointer (cl_context context, const void *svm_ptr, size_t size,
   /* TODO we need a better data structure than linked list,
    * right now it does a linear scan of all SVM allocations. */
   POCL_LOCK_OBJ (context);
-  pocl_svm_ptr *found = NULL, *item = NULL;
+  pocl_raw_ptr *found = NULL, *item = NULL;
   char *svm_alloc_end = NULL;
   char *svm_alloc_start = NULL;
-  DL_FOREACH (context->svm_ptrs, item)
+  DL_FOREACH (context->raw_ptrs, item)
   {
-    svm_alloc_start = (char *)item->svm_ptr;
+    svm_alloc_start = (char *)item->vm_ptr;
     svm_alloc_end = svm_alloc_start + item->size;
     if (((char *)svm_ptr >= svm_alloc_start)
         && ((char *)svm_ptr < svm_alloc_end))

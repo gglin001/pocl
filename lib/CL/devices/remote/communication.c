@@ -622,11 +622,11 @@ pocl_network_connect (remote_server_data_t *data, int *fd, unsigned port,
   memcpy (hs.authkey, data->authkey, AUTHKEY_LENGTH);
   ssize_t readb, writeb;
   uint32_t req_len = request_size (hs.message_type);
-  writeb = write_full (socket_fd, &req_len, sizeof (req_len), NULL);
+  writeb = write_full (socket_fd, &req_len, sizeof (req_len), data);
   assert ((size_t)(writeb) == 0);
-  writeb = write_full (socket_fd, &hs, req_len, NULL);
+  writeb = write_full (socket_fd, &hs, req_len, data);
   assert ((size_t)(writeb) == 0);
-  readb = read_full (socket_fd, &hsr, sizeof (hsr), NULL);
+  readb = read_full (socket_fd, &hsr, sizeof (hsr), data);
   assert ((size_t)(readb) == sizeof (hsr));
   if (reply_out)
     memcpy (reply_out, &hsr, sizeof (ReplyMsg_t));
@@ -2102,7 +2102,7 @@ pocl_network_create_buffer (remote_device_data_t *ddata, cl_mem mem,
 
   SET_REMOTE_ID (buffer, mem->id);
 
-  if (mem->flags & CL_MEM_PINNED)
+  if (mem->flags & CL_MEM_DEVICE_ADDRESS_EXT)
     {
       assert (device_addr != NULL);
       *device_addr = (void *)netcmd->reply.m.create_buffer.device_addr;

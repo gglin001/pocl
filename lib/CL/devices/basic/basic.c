@@ -2,7 +2,7 @@
 
    Copyright (c) 2011-2013 Universidad Rey Juan Carlos and
                  2011-2021 Pekka Jääskeläinen
-                 2023 Pekka Jääskeläinen / Intel Finland Oy
+                 2023-2024 Pekka Jääskeläinen / Intel Finland Oy
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -280,7 +280,7 @@ pocl_basic_run (void *data, _cl_command_node *cmd)
           else
             {
               void *ptr = NULL;
-              if (al->is_svm)
+              if (al->is_raw_ptr)
                 {
                   ptr = *(void **)al->value;
                 }
@@ -845,8 +845,8 @@ pocl_basic_usm_alloc (cl_device_id dev, unsigned alloc_type,
       DL_APPEND (usm_allocations, all);
       POCL_UNLOCK (usm_lock);
 
-      POCL_MSG_WARN ("ALLOCATED: ALL_PTR: %p ALL_SIZE: %zu\n", all->ptr,
-                     all->size);
+      POCL_MSG_PRINT_MEMORY ("USM ALLOCATED: PTR: %p SIZE: %zu\n", all->ptr,
+                             all->size);
     }
 
 ERROR:
@@ -940,8 +940,8 @@ pocl_basic_get_mem_info_ext (cl_device_id dev, const void *ptr,
   pocl_basic_usm_allocation_t *item = NULL;
   DL_FOREACH (usm_allocations, item)
   {
-    POCL_MSG_WARN ("PTR: %p ITEM_PTR: %p SIZE: %zu\n", ptr, item->ptr,
-                   item->size);
+    POCL_MSG_PRINT_MEMORY ("PTR: %p ITEM_PTR: %p SIZE: %zu\n", ptr, item->ptr,
+                           item->size);
     if ((ptr >= item->ptr)
         && ((const char *)ptr < ((const char *)item->ptr + item->size)))
     {
@@ -1006,6 +1006,7 @@ pocl_basic_set_kernel_exec_info_ext (cl_device_id dev,
     case CL_KERNEL_EXEC_INFO_SVM_FINE_GRAIN_SYSTEM:
     case CL_KERNEL_EXEC_INFO_SVM_PTRS:
     case CL_KERNEL_EXEC_INFO_USM_PTRS_INTEL:
+    case CL_KERNEL_EXEC_INFO_DEVICE_PTRS_EXT:
     case CL_KERNEL_EXEC_INFO_INDIRECT_HOST_ACCESS_INTEL:
     case CL_KERNEL_EXEC_INFO_INDIRECT_DEVICE_ACCESS_INTEL:
     case CL_KERNEL_EXEC_INFO_INDIRECT_SHARED_ACCESS_INTEL:

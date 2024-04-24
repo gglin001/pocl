@@ -582,6 +582,11 @@ endif()
 
 if(ENABLE_LLVM)
 
+  # minimum LLVM version at which to enable new PM
+  if(NOT DEFINED MIN_LLVM_NEW_PASSMANAGER)
+    set(MIN_LLVM_NEW_PASSMANAGER 14)
+  endif()
+
   include(LLVM RESULT_VARIABLE RES)
   if(NOT RES)
     message(FATAL_ERROR "Could not load LLVM.cmake")
@@ -1163,7 +1168,7 @@ else()
 endif()
 
 if (APPLE AND VISIBILITY_HIDDEN)
-  add_compile_definitions("-DCL_API_CALL=__attribute__ ((visibility (\"default\")))")
+  add_compile_definitions("CL_API_CALL=__attribute__ ((visibility (\"default\")))")
 endif()
 
 if(ENABLE_ICD OR ENABLE_PROXY_DEVICE OR ANDROID)
@@ -1326,8 +1331,8 @@ set(HOST_DEVICE_CL_VERSION_MINOR 0)
 set(HOST_DEVICE_EXTENSIONS "cl_khr_byte_addressable_store cl_khr_global_int32_base_atomics \
 cl_khr_global_int32_extended_atomics cl_khr_local_int32_base_atomics \
 cl_khr_local_int32_extended_atomics cl_khr_3d_image_writes \
-cl_khr_command_buffer cl_khr_subgroups cl_intel_unified_shared_memory \
-cl_exp_pinned_buffers")
+cl_khr_command_buffer cl_khr_command_buffer_multi_device cl_khr_subgroups \
+cl_intel_unified_shared_memory cl_ext_buffer_device_address")
 
 # Host CPU device: list of OpenCL 3.0 features that are always enabled
 # TODO: __opencl_c_atomic_scope_all_devices works with CPU device but not others
@@ -1567,11 +1572,17 @@ if(ENABLE_PROXY_DEVICE)
     message(FATAL_ERROR "RENAME_POCL and PROXY_USE_LIBOPENCL_STUB can not be used together")
   endif()
 
+  if(RENAME_POCL AND ENABLE_LOADABLE_DRIVERS)
+    message(FATAL_ERROR "Proxy driver cannot be used with ENABLE_LOADABLE_DRIVERS unless using PROXY_USE_LIBOPENCL_STUB")
+  endif()
+
   if(NOT PROXY_USE_LIBOPENCL_STUB)
     set(RENAME_POCL ON )
   else()
     set(RENAME_POCL OFF )
   endif()
+
+
 
   set(BUILD_PROXY 1)
 

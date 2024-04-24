@@ -31,7 +31,7 @@ env:
 jobs:
   main_test_matrix:
     name: LLVM ${{ matrix.llvm }} - ${{ matrix.config }}
-    runs-on: [self-hosted, linux, x64, debian]
+    runs-on: [self-hosted, linux, x64, "${{ matrix.config }}" ]
     strategy:
       fail-fast: false
       matrix:
@@ -66,12 +66,14 @@ jobs:
           mkdir ${{ github.workspace }}/build
           if [ "${{ matrix.config }}" == "cts_spirv" ]; then
             mkdir -p /home/github/examples/build_cts_spirv
+            mkdir -p /home/github/examples/source
             runCMake -DENABLE_TESTSUITES=conformance -DENABLE_CONFORMANCE=ON -DTESTSUITE_SOURCE_BASEDIR=/home/github/examples/source -DTESTSUITE_BASEDIR=/home/github/examples/build_cts_spirv
           elif [ "${{ matrix.config }}" == "tier1" ]; then
             mkdir -p /home/github/examples/build_tier1
             runCMake "-DENABLE_TESTSUITES=AMDSDK3.0;piglit;conformance;PyOpenCL;IntelSVM" -DENABLE_CONFORMANCE=ON -DTESTSUITE_SOURCE_BASEDIR=/home/github/examples/source -DTESTSUITE_BASEDIR=/home/github/examples/build_tier1
           elif [ "${{ matrix.config }}" == "chipstar" ]; then
             mkdir -p /home/github/examples/build_chipstar
+            mkdir -p /home/github/examples/source
             runCMake -DENABLE_TESTSUITES=chipStar -DTESTSUITE_SOURCE_BASEDIR=/home/github/examples/source -DTESTSUITE_BASEDIR=/home/github/examples/build_chipstar
           elif [ "${{ matrix.config }}" == "asan" ]; then
             runCMake -DENABLE_ASAN=1 -DENABLE_ICD=0 -DENABLE_LOADABLE_DRIVERS=0 -DDEVELOPER_MODE=OFF
@@ -85,7 +87,7 @@ jobs:
 
       - name: Build PoCL
         id: build_pocl
-        timeout-minutes: 20
+        timeout-minutes: 30
         run: |
           cd ${{ github.workspace }}/build && make -j$(nproc)
 
@@ -121,6 +123,11 @@ jobs:
             echo "Unknown configuration" && exit 1
           fi
 
+  # jobs run on Github-hosted runners.
+  # TODO: move more self-hosted to Github-hosted
+  # unfortunately sanitizers don't work on Github-hosted runners,
+  # probably some limitation of Virtual address space
+  # (sanitizer-built binaries require >=20 terabytes of Virt AS)
   github_test_matrix:
     name: LLVM ${{ matrix.llvm }} - ${{ matrix.config }}
     runs-on: ubuntu-latest
@@ -285,7 +292,7 @@ jobs:
 
   remote_matrix:
     name: LLVM ${{ matrix.llvm }} - remote
-    runs-on: [self-hosted, linux, x64, debian]
+    runs-on: [self-hosted, linux, x64, remote]
     strategy:
       fail-fast: false
       matrix:
@@ -329,7 +336,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        llvm: [16]
+        llvm: [17]
 
     steps:
       - uses: actions/checkout@v4

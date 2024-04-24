@@ -4,8 +4,8 @@ name: Weekly full CTS run
 on:
   workflow_dispatch:
   schedule:
-# at 2:17 every saturday
-    - cron: '17 2 * * 6'
+# at 14:01 every friday
+    - cron: '01 14 * * 5'
 
 env:
   POCL_CACHE_DIR: "/tmp/GH_POCL_CACHE"
@@ -22,7 +22,7 @@ env:
 jobs:
   build:
     name: LLVM ${{ matrix.llvm }} - ${{ matrix.config }}
-    runs-on: [self-hosted, linux, x64, medium]
+    runs-on: [self-hosted, linux, x64, full_cts]
     timeout-minutes: 1440
     strategy:
       fail-fast: false

@@ -2,7 +2,7 @@
 
    Copyright (c) 2018 Michal Babej / Tampere University of Technology
    Copyright (c) 2019-2023 Jan Solanti / Tampere University
-   Copyright (c) 2023 Pekka Jääskeläinen / Intel Finland Oy
+   Copyright (c) 2023-2024 Pekka Jääskeläinen / Intel Finland Oy
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -226,7 +226,7 @@ pocl_remote_free (cl_device_id device, cl_mem mem)
     {
       /* When SVM is enabled, we allocate all buffers from the SVM region
          in the driver. Thus we should also free the SVM space. */
-      if (pocl_free_buffer (&svm_data->allocations, mem->mem_host_ptr) == NULL)
+      if (pocl_free_buffer (&svm_data->allocations, (memory_address_t) mem->mem_host_ptr) == NULL)
         {
           POCL_MSG_ERR ("Failed freeing internal SVM allocation %p.\n",
                         mem->mem_host_ptr);
@@ -578,8 +578,8 @@ pocl_remote_init (unsigned j, cl_device_id device, const char *parameters)
 
       /* The CG SVM support can be used for "pinned buffers" as well and
          USM. */
-      const char *bonus_extensions = CL_POCL_PINNED_BUFFERS_EXTENSION_NAME
-          " cl_intel_unified_shared_memory";
+      const char *bonus_extensions = "cl_ext_buffer_device_address "
+                                     " cl_intel_unified_shared_memory";
       unsigned exts_str_size
           = strlen (device->extensions) + 1 + strlen (bonus_extensions);
       char *exts_w_pinned = calloc (exts_str_size + 1, 1);
@@ -654,7 +654,7 @@ create_build_hash (cl_program program, cl_device_id device, unsigned device_i)
 
 /**
  * Move build logs into the program object according to the device list
- * specified for the progam.
+ * specified for the program.
  */
 static void
 setup_build_logs (cl_program program, unsigned num_relevant_devices,
@@ -1409,6 +1409,9 @@ pocl_remote_join (cl_device_id device, cl_command_queue cq)
         }
       else
         {
+          POCL_MSG_PRINT_EVENTS (
+              "remote: waiting for %d commands(s), last event id %zu\n",
+              cq->last_event.event->id);
           POCL_WAIT_COND (dd->cq_cond, cq->pocl_lock);
         }
     }
@@ -1435,13 +1438,24 @@ pocl_remote_notify (cl_device_id device, cl_event event, cl_event finished)
     }
 
   if (!node->ready)
-    return;
+    {
+      POCL_MSG_PRINT_EVENTS (
+          "remote: command related to the notified event %lu not ready\n",
+          event->id);
+      return;
+    }
 
   if (pocl_command_is_ready (node->sync.event.event))
     {
       assert (event->status == CL_QUEUED);
       pocl_update_event_submitted (event);
       remote_push_command (node);
+    }
+  else
+    {
+      POCL_MSG_PRINT_EVENTS (
+          "remote: sync event %lu is not ready for the notified event %lu\n",
+          node->sync.event.event->id, event->id);
     }
 
   return;
@@ -1949,12 +1963,12 @@ pocl_remote_async_run (void *data, _cl_command_node *cmd)
           requires_kernarg_update = 1;
           arg_array[i] = al->size;
         }
-      else if (al->is_svm)
+      else if (al->is_raw_ptr)
         {
           arg_array[i] = (uint64_t) * (void **)al->value;
           POCL_MSG_PRINT_MEMORY (
-              "Adding SVM pool offset to an SVM ptr arg %u (%p to %p)\n", i,
-              (void *)arg_array[i],
+              "Adding SVM pool offset %zu to an SVM ptr arg %u (%p to %p)\n",
+              i, ddata->svm_region_offset, (void *)arg_array[i],
               (char *)arg_array[i] + ddata->svm_region_offset);
           arg_array[i] = arg_array[i] + ddata->svm_region_offset;
           requires_kernarg_update = 1;
@@ -2567,6 +2581,7 @@ pocl_remote_set_kernel_exec_info_ext (cl_device_id dev,
                 = malloc (sizeof (struct _pocl_ptr_list_node));
             n->ptr = ((void **)param_value)[i];
             DL_APPEND (kernel->svm_ptrs, n);
+            POCL_MSG_PRINT_MEMORY ("Set a indirect SVM/USM ptr %p\n", n->ptr);
           }
         return CL_SUCCESS;
       }

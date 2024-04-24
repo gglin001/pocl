@@ -1,3 +1,7 @@
+.cache
+.vscode/
+core
+
 build*/*
 *~
 
@@ -83,6 +87,4 @@ CMakeLists.txt.user
 .idea/
 cmake-build-*/
 
-.cache
-.vscode/
-core
+.gdb_history

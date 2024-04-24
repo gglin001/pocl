@@ -1,6 +1,6 @@
 /* OpenCL runtime library: pocl_util utility functions
 
-   Copyright (c) 2012-2023 pocl developers
+   Copyright (c) 2012-2024 PoCL Developers
 
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to
@@ -135,6 +135,13 @@ cl_int
 pocl_cmdbuf_choose_recording_queue (cl_command_buffer_khr command_buffer,
                                     cl_command_queue *command_queue);
 
+cl_int pocl_cmdbuf_validate_queue_list (cl_uint num_queues,
+                                        const cl_command_queue *queues);
+
+cl_command_buffer_properties_khr
+pocl_cmdbuf_get_property (cl_command_buffer_khr command_buffer,
+                          cl_command_buffer_properties_khr name);
+
 POCL_EXPORT
 int pocl_alloc_or_retain_mem_host_ptr (cl_mem mem);
 
@@ -157,12 +164,23 @@ int pocl_buffer_boundcheck_3d(const size_t buffer_size, const size_t *origin,
                               size_t *slice_pitch, const char* prefix);
 
 /**
- * Finds an SVM allocation where the host_ptr is mapped.
+ * Finds an SVM/USM allocation where the host pointer is in.
  *
- * @return an allocation where host_ptr is in, NULL if not found.
+ * @return an allocation (info) where it is found, NULL if not found.
  */
-pocl_svm_ptr *pocl_find_svm_ptr_in_context (cl_context context,
-                                            const void *host_ptr);
+pocl_raw_ptr *pocl_find_raw_ptr_with_vm_ptr (cl_context context,
+                                             const void *host_ptr);
+
+/**
+ * Finds a cl_mem allocation where the device pointer is mapped.
+ *
+ * The cl_mem allocation should be allocated with CL_MEM_BUFFER_DEVICE_ADDRESS.
+ *
+ * @return an allocation where the device pointer is in, NULL if not found.
+ */
+POCL_EXPORT
+pocl_raw_ptr *pocl_find_raw_ptr_with_dev_ptr (cl_context context,
+                                              const void *dev_ptr);
 
 int
 check_copy_overlap(const size_t src_offset[3],
@@ -324,7 +342,7 @@ void pocl_str_tolower (char *out, const char *in);
 #endif
 
 /* Common macro for cleaning up "*GetInfo" API call implementations.
- * All the *GetInfo functions have been specified to look alike, 
+ * All the *GetInfo functions have been specified to look alike,
  * and have been implemented to use the same variable names, so this
  * code can be shared.
  */
@@ -436,7 +454,15 @@ while (0)
     {                                                                         \
       POCL_RETURN_ERROR_COND ((!IS_CL_OBJECT_VALID (command_buffer)),         \
                               CL_INVALID_COMMAND_BUFFER_KHR);                 \
-      POCL_RETURN_ERROR_COND ((command_queue != NULL),                        \
+      POCL_RETURN_ERROR_COND (                                                \
+        (command_queue == NULL && command_buffer->num_queues > 1),            \
+        CL_INVALID_COMMAND_QUEUE);                                            \
+      int queue_in_buffer = 0;                                                \
+      for (int ii = 0; ii < command_buffer->num_queues; ++ii)                 \
+        {                                                                     \
+          queue_in_buffer |= (command_queue == command_buffer->queues[ii]);   \
+        }                                                                     \
+      POCL_RETURN_ERROR_COND ((command_queue != NULL && !queue_in_buffer),    \
                               CL_INVALID_COMMAND_QUEUE);                      \
       POCL_RETURN_ERROR_COND ((mutable_handle != NULL), CL_INVALID_VALUE);    \
       errcode = pocl_cmdbuf_choose_recording_queue (command_buffer,           \

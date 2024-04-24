@@ -279,8 +279,7 @@ process_options (const char *options, char *modded_options, char *link_options,
         }
       else if (strncmp (token, "-g", 2) == 0)
         {
-          token = "-debug-info-kind=limited " \
-          "-dwarf-version=4 -debugger-tuning=gdb";
+          APPEND_TOKEN ();
         }
       else if (strncmp (token, "-D", 2) == 0 || strncmp (token, "-I", 2) == 0)
         {
@@ -775,7 +774,8 @@ compile_and_link_program(int compile_program,
     {
       cl_device_id device = program->devices[device_i];
 
-      if (cl_c_version && check_device_supports (device, cl_c_version))
+      if (!pocl_get_bool_option ("POCL_IGNORE_CL_STD", 0) && cl_c_version
+          && check_device_supports (device, cl_c_version))
         {
           APPEND_TO_BUILD_LOG_GOTO (
               build_error_code,

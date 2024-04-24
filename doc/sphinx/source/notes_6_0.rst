@@ -20,6 +20,45 @@ any particular behavior (or lack thereof) they are treated as a no-op. However
 specifying them no longer causes `clCreateCommandQueueWithProperties` to return
 an error.
 
+===================================================
+Experimental cl_ext_buffer_device_address prototype
+===================================================
+
+This new extension prototype enables allocating `cl_mem` buffers with client-accessible
+physical addresses which is guaranteed to be fixed for the lifetime of the buffer.
+The main difference to coarse-grain SVM allocations is that all
+SVM allocations require always the virtual address address to match the device address,
+thus mapping the buffer address range also to the vmem even though its contents
+are managed only via explicit memcopies by the application.
+
+Although it's a very simple incremental extension to the basic `clCreateBuffer()` API,
+it enables implementing `hipMalloc()` HIP/CUDA and `omp_target_alloc()` OpenMP
+allocation calls when the application doesn't require a unified address space.
+
+There is also a prototype implementation of the extension in `Rusticl/Mesa <https://gitlab.freedesktop.org/karolherbst/mesa/-/commit/fa5f51da728dcaf277b0919e90e0400859f290bb>`_.
+
+`chipStar <https://github.com/CHIP-SPV/chipStar>`_ can optionally
+use the extension, if neither Unified Shared Memory (Intel extension) nor
+OpenCL 2.0+ Coarse-Grain SVM is supported by the OpenCL device/platform,
+and the HIP/CUDA application doesn't require unified address space, but
+explicitly specifies the memory copy directions.
+
+The actual extension text is yet to write and the extension can
+change without notification as we get feedback and more experience from
+using it.
+
+============================
+Multi-device command buffers
+============================
+
+Initial support for `cl_khr_command_buffer_multi_device` has been added, i.e. it
+is now possible to create command buffers associated with multiple command queues
+that are not associated with the same device and to remap command buffers to new
+(sets of) command queues. This should be driver-agnostic but has not been tested
+with other drivers than CPU. There likely are no large performance gains from
+the current implementation either, as everything happens in the surface layers
+of the library.
+
 ===========================
 Driver-specific features
 ===========================
@@ -35,6 +74,7 @@ CPU driver
    the oneAPI binary distributions of DPC++ by adding the following environment
    settings: **POCL_DRIVER_VERSION_OVERRIDE=2023.16.7.0.21_160000 POCL_CPU_VENDOR_ID_OVERRIDE=32902**.
  * Added support for the **__opencl_c_work_group_collective_functions** feature.
+ * improved SPIR-V support on architectures other than ARM/x86 (like RISC-V)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Remote
@@ -67,6 +107,19 @@ Basic compile and link support. Tested with conformance suite's
 execute_after_simple_compile_and_link_no_device_info and execute_after_two_file_link
 test cases, as well as `chipStar <https://github.com/CHIP-SPV/chipStar>`_,
 which uses the API for enhanced SPIR-V portability.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Level Zero driver
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* optimized the host-device synchronization overhead, this should
+  be visible mainly with kernels that take <1ms to run
+
+* implemented support for ZE_experimental_relaxed_allocation_limits,
+  If the Level Zero driver supports it, PoCL-Level0 will set
+  CL_DEVICE_MAX_MEM_ALLOC_SIZE to 85% of the available Device memory.
+  PoCL will automatically compile kernels with both 32bit and 64bit
+  pointer offsets, and select the correct version before execution.
 
 ===================================
 Deprecation/feature removal notices

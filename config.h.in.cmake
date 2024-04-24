@@ -198,10 +198,12 @@
 
 #define LLVM_OPT "@LLVM_OPT@"
 
+#define LLVM_LINK "@LLVM_LINK@"
+
 #cmakedefine LLVM_MAJOR @LLVM_VERSION_MAJOR@
 
-// minimum LLVM version at which to enable new PM
-#define MIN_LLVM_NEW_PASSMANAGER 14
+/* minimum LLVM version at which to enable new PM */
+#define MIN_LLVM_NEW_PASSMANAGER @MIN_LLVM_NEW_PASSMANAGER@
 
 #cmakedefine LLVM_BUILD_MODE_DEBUG
 
