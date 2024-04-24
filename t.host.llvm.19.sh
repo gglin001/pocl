@@ -15,6 +15,7 @@ args=(
   -DENABLE_EXAMPLES=ON
 
   # iree-llvm docker env
+  # ln -s /iree-llvm-project/build/install /iree-llvm-project/build/Release
   -DLLVM_CONFIG=/iree-llvm-project/build/install/bin/llvm-config
   -DLLVM_INCLUDE_DIRS=/iree-llvm-project/build/install/include
   -DSTATIC_LLVM=ON
