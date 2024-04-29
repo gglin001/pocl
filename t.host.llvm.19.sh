@@ -42,6 +42,11 @@ poclcc -l
 # TODO: fix error:
 # ` |   WARNING |  Loading libpocl-devices-pthread.so failed: libpocl-devices-pthread.so: cannot open shared object file: No such file or directory`
 
+# patchelf --add-rpath "\$ORIGIN/../lib:\$ORIGIN/../lib/CL:\$ORIGIN/../lib/pocl" build/examples/matadd/matadd
+patchelf --remove-rpath build/examples/matadd/matadd
+patchelf --add-rpath "$PWD/build/install/lib" build/examples/matadd/matadd
+patchelf --print-rpath build/examples/matadd/matadd
+
 # `lib/CL/pocl_debug.h`
 POCL_DEBUG=ALL build/examples/matadd/matadd
 POCL_DEBUG=GENERAL build/examples/matadd/matadd
